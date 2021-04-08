@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { Contract } from 'ethers';
-import { getOwnPropertyDescriptor } from 'core-js/core/object';
 
 describe('FlashBot', () => {
   let fb: Contract;
@@ -41,7 +40,10 @@ describe('FlashBot', () => {
 
     const ownerBalanceBefore = await owner.getBalance();
     // let addr1 withdraw so the gas not spend on owner
-    await fb.connect(addr1).withdraw();
+    expect(await fb.connect(addr1).withdraw())
+      .to.emit(fb, 'Withdrawn')
+      .withArgs(owner.address, amount);
+
     const ownerBalanceAfter = await owner.getBalance();
     expect(ownerBalanceAfter).to.be.eq(ownerBalanceBefore.add(amount));
   });
