@@ -6,7 +6,7 @@ import '../FlashBot.sol';
 contract TestMath is FlashBot {
     constructor() FlashBot(address(1)) {}
 
-    function _calcBorrowAmount(OrderedReserves memory reserves) internal pure returns (uint256) {
+    function _calcBorrowAmount(OrderedReserves memory reserves) public pure returns (uint256) {
         return calcBorrowAmount(reserves);
     }
 

@@ -236,8 +236,44 @@ contract FlashBot is Ownable {
 
     /// @dev calculate the maximum base asset amount to borrow in order to get maximum profit during arbitrage
     function calcBorrowAmount(OrderedReserves memory reserves) internal pure returns (uint256 amount) {
+        // we can't use a1,b1,a2,b2 directly, because it will result overflow/underflow of the intermediate result
+        // so we:
+        //    1. divide all the numbers by d to prevent from overflow/underflow
+        //    2. calculate the result use above numbers
+        //    3. multiple d with the result to get the final result
+        // note this workaround is only suitable for ERC20 token with 18 decimals, which I believe most tokens do
+
+        uint256 min1 = reserves.a1 < reserves.b1 ? reserves.a1 : reserves.b1;
+        uint256 min2 = reserves.a2 < reserves.b2 ? reserves.a2 : reserves.b2;
+        uint256 min = min1 < min2 ? min1 : min2;
+
+        uint256 d;
+        if (min > 1e24) {
+            d = 1e20;
+        } else if (min > 1e23) {
+            d = 1e19;
+        } else if (min > 1e22) {
+            d = 1e18;
+        } else if (min > 1e21) {
+            d = 1e17;
+        } else if (min > 1e20) {
+            d = 1e16;
+        } else if (min > 1e19) {
+            d = 1e15;
+        } else if (min > 1e18) {
+            d = 1e14;
+        } else if (min > 1e17) {
+            d = 1e13;
+        } else if (min > 1e16) {
+            d = 1e12;
+        } else if (min > 1e15) {
+            d = 1e11;
+        } else {
+            d = 1e10;
+        }
+
         (int256 a1, int256 a2, int256 b1, int256 b2) =
-            (int256(reserves.a1), int256(reserves.a2), int256(reserves.b1), int256(reserves.b2));
+            (int256(reserves.a1 / d), int256(reserves.a2 / d), int256(reserves.b1 / d), int256(reserves.b2 / d));
 
         int256 a = a1 * b1 - a2 * b1;
         int256 b = 2 * b1 * b2 * (a1 + a2);
@@ -246,8 +282,8 @@ contract FlashBot is Ownable {
         (int256 x1, int256 x2) = calcSolutionForQuadratic(a, b, c);
 
         // 0 < x < b1 and 0 < x < b2
-        assert((x1 > 0 && x1 < b1 && x1 < b2) || (x1 > 0 && x1 < b1 && x1 < b2));
-        amount = (x1 > 0 && x1 < b1 && x1 < b2) ? uint256(x1) : uint256(x2);
+        require((x1 > 0 && x1 < b1 && x1 < b2) || (x1 > 0 && x1 < b1 && x1 < b2), "Wrong input order");
+        amount = (x1 > 0 && x1 < b1 && x1 < b2) ? uint256(x1) * d : uint256(x2) * d;
     }
 
     /// @dev find solution of quadratic equation: ax^2 + bx + c = 0, only return the positive solution
@@ -270,7 +306,7 @@ contract FlashBot is Ownable {
         assert(n > 1);
 
         // The scale factor is a crude way to turn everything into integer calcs.
-        // Actually do (n * 10 ^ 6) ^ (1/2)
+        // Actually do (n * 10 ^ 4) ^ (1/2)
         uint256 _n = n * 10**6;
         uint256 c = _n;
         res = _n;

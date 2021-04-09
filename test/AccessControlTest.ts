@@ -1,11 +1,11 @@
-import { expect } from "chai";
-import { ethers, waffle } from "hardhat";
-import { TestERC20 } from "../typechain/TestERC20";
-import { FlashBot } from "../typechain/FlashBot";
+import { expect } from 'chai';
+import { ethers, waffle } from 'hardhat';
+import { TestERC20 } from '../typechain/TestERC20';
+import { FlashBot } from '../typechain/FlashBot';
 
-import { flashBotFixture } from "./shared/fixtures";
+import { flashBotFixture } from './shared/fixtures';
 
-describe("FlashBot access control", () => {
+describe('FlashBot access control', () => {
   let weth: TestERC20;
   let flashBot: FlashBot;
 
@@ -13,16 +13,16 @@ describe("FlashBot access control", () => {
     ({ weth, flashBot } = await waffle.loadFixture(flashBotFixture));
   });
 
-  it("Should set owner to deployer", async () => {
+  it('Should set owner to deployer', async () => {
     const [owner] = await ethers.getSigners();
     const fbOwner = await flashBot.owner();
     expect(fbOwner).to.be.equal(owner.address);
   });
 
-  it("Should be receivable", async () => {
+  it('Should be receivable', async () => {
     const [owner] = await ethers.getSigners();
 
-    const amount = ethers.utils.parseEther("5.1");
+    const amount = ethers.utils.parseEther('5.1');
     await owner.sendTransaction({
       to: flashBot.address,
       value: amount,
@@ -32,16 +32,16 @@ describe("FlashBot access control", () => {
     expect(balance).to.be.eq(amount);
   });
 
-  it("Should be withdrawable", async () => {
+  it('Should be withdrawable', async () => {
     const [owner, addr1] = await ethers.getSigners();
 
-    const amount = ethers.utils.parseEther("5.1");
+    const amount = ethers.utils.parseEther('5.1');
     await addr1.sendTransaction({
       to: flashBot.address,
       value: amount,
     });
 
-    const wethAmount = ethers.utils.parseEther("100.1");
+    const wethAmount = ethers.utils.parseEther('100.1');
     await weth.mint(flashBot.address, wethAmount);
 
     const balanceBefore = await owner.getBalance();
@@ -49,7 +49,7 @@ describe("FlashBot access control", () => {
 
     // let addr1 withdraw so the gas not spend on owner
     expect(await flashBot.connect(addr1).withdraw())
-      .to.emit(flashBot, "Withdrawn")
+      .to.emit(flashBot, 'Withdrawn')
       .withArgs(owner.address, amount);
 
     const balanceAfter = await owner.getBalance();
