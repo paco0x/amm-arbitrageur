@@ -12,12 +12,6 @@ import './interfaces/IWETH.sol';
 import './libraries/Decimal.sol';
 import './libraries/SafeMath.sol';
 
-struct TokenInfo {
-    address baseToken;
-    address quoteToken;
-    bool baseTokenSmaller;
-}
-
 struct OrderedReserves {
     uint256 a1; // base asset
     uint256 b1;
@@ -32,14 +26,12 @@ struct PoolReserves {
     uint256 pool1Reserve1;
 }
 
-struct ArbitrageData {
+struct ArbitrageInfo {
+    address baseToken;
+    address quoteToken;
+    bool baseTokenSmaller;
     address lowerPool; // pool with lower price, denominated in quote asset
     address higherPool; // pool with higher price, denominated in quote asset
-    uint256 lowerPoolReserveIn;
-    uint256 lowerPoolReserveOut;
-    uint256 higherPoolReserveIn;
-    uint256 higherPoolReserveOut;
-    uint256 borrowAmount;
 }
 
 struct CallbackData {
@@ -140,8 +132,8 @@ contract FlashBot is Ownable {
     /// @notice Do an arbitrage between two Uniswap-like AMM pools
     /// @dev Two pools must contains same token pair
     function flashArbitrage(address pool0, address pool1) external validatePair(pool0, pool1) {
-        TokenInfo memory tokenInfo;
-        (tokenInfo.baseTokenSmaller, tokenInfo.baseToken, tokenInfo.quoteToken) = isbaseTokenSmaller(pool0, pool1);
+        ArbitrageInfo memory info;
+        (info.baseTokenSmaller, info.baseToken, info.quoteToken) = isbaseTokenSmaller(pool0, pool1);
 
         PoolReserves memory reserves;
         (reserves.pool0Reserve0, reserves.pool0Reserve1, ) = IUniswapV2Pair(pool0).getReserves();
@@ -149,7 +141,7 @@ contract FlashBot is Ownable {
 
         // Calculate the price denominated in quote asset token
         (Decimal.D256 memory price0, Decimal.D256 memory price1) =
-            tokenInfo.baseTokenSmaller
+            info.baseTokenSmaller
                 ? (
                     Decimal.from(reserves.pool0Reserve0).div(reserves.pool0Reserve1),
                     Decimal.from(reserves.pool1Reserve0).div(reserves.pool1Reserve1)
@@ -161,7 +153,6 @@ contract FlashBot is Ownable {
 
         // Compare price denominated in quote asset between two pools
         // We borrow base asset by using flash swap from lower price pool and sell them to higher price pool
-        ArbitrageData memory info;
         OrderedReserves memory orderedReserves;
 
         // get a1, b1, a2, b2 with following rule:
@@ -169,40 +160,39 @@ contract FlashBot is Ownable {
         // 2. (a1, a2) is the base asset reserves in two pools
         if (price0.lessThan(price1)) {
             (info.lowerPool, info.higherPool) = (pool0, pool1);
-            (orderedReserves.a1, orderedReserves.a2, orderedReserves.b1, orderedReserves.b2) = tokenInfo
-                .baseTokenSmaller
+            (orderedReserves.a1, orderedReserves.a2, orderedReserves.b1, orderedReserves.b2) = info.baseTokenSmaller
                 ? (reserves.pool0Reserve0, reserves.pool0Reserve1, reserves.pool1Reserve0, reserves.pool1Reserve1)
                 : (reserves.pool0Reserve1, reserves.pool0Reserve0, reserves.pool1Reserve1, reserves.pool1Reserve0);
         } else {
             (info.lowerPool, info.higherPool) = (pool1, pool0);
-            (orderedReserves.a1, orderedReserves.a2, orderedReserves.b1, orderedReserves.b2) = tokenInfo
-                .baseTokenSmaller
+            (orderedReserves.a1, orderedReserves.a2, orderedReserves.b1, orderedReserves.b2) = info.baseTokenSmaller
                 ? (reserves.pool1Reserve0, reserves.pool1Reserve1, reserves.pool0Reserve0, reserves.pool0Reserve1)
                 : (reserves.pool1Reserve1, reserves.pool1Reserve0, reserves.pool0Reserve1, reserves.pool0Reserve0);
         }
-        info.borrowAmount = calcBorrowAmount(orderedReserves);
 
         // this must be updated every transaction for callback origin authentication
         permissionedPairAddress = info.lowerPool;
 
-        uint256 balanceBefore = IERC20(tokenInfo.baseToken).balanceOf(address(this));
+        uint256 balanceBefore = IERC20(info.baseToken).balanceOf(address(this));
 
+        // avoid stack too deep error
         {
+            uint256 borrowAmount = calcBorrowAmount(orderedReserves);
             (uint256 amount0Out, uint256 amount1Out) =
-                tokenInfo.baseTokenSmaller ? (uint256(0), info.borrowAmount) : (info.borrowAmount, uint256(0));
+                info.baseTokenSmaller ? (uint256(0), borrowAmount) : (borrowAmount, uint256(0));
             // borrow quote token on lower price pool, calculate how much debt we need to pay in base token
-            uint256 debtAmount = getAmountIn(info.borrowAmount, orderedReserves.a1, orderedReserves.b1);
+            uint256 debtAmount = getAmountIn(borrowAmount, orderedReserves.a1, orderedReserves.b1);
             // sell borrowed quote token on higher price pool, calculate how much base token we can get
-            uint256 baseAssetOutAmount = getAmountOut(info.borrowAmount, orderedReserves.b2, orderedReserves.a2);
+            uint256 baseAssetOutAmount = getAmountOut(borrowAmount, orderedReserves.b2, orderedReserves.a2);
             require(baseAssetOutAmount > debtAmount, 'Arbitrage fail, not profit');
 
             // can only initialize this way to avoid stack too deep error
             CallbackData memory callbackData;
             callbackData.debtPool = info.lowerPool;
             callbackData.targetPool = info.higherPool;
-            callbackData.debtTokenSmaller = tokenInfo.baseTokenSmaller;
-            callbackData.borrowedToken = tokenInfo.quoteToken;
-            callbackData.debtToken = tokenInfo.baseToken;
+            callbackData.debtTokenSmaller = info.baseTokenSmaller;
+            callbackData.borrowedToken = info.quoteToken;
+            callbackData.debtToken = info.baseToken;
             callbackData.debtAmount = debtAmount;
             callbackData.debtTokenOutAmount = baseAssetOutAmount;
 
@@ -210,11 +200,11 @@ contract FlashBot is Ownable {
             IUniswapV2Pair(info.lowerPool).swap(amount0Out, amount1Out, address(this), data);
         }
 
-        uint256 balanceAfter = IERC20(tokenInfo.baseToken).balanceOf(address(this));
+        uint256 balanceAfter = IERC20(info.baseToken).balanceOf(address(this));
         require(balanceAfter > balanceBefore, 'Losing money');
 
-        if (tokenInfo.baseToken == WETH) {
-            IWETH(tokenInfo.baseToken).withdraw(balanceAfter);
+        if (info.baseToken == WETH) {
+            IWETH(info.baseToken).withdraw(balanceAfter);
         }
         permissionedPairAddress = address(1);
     }
