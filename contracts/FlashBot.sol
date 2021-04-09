@@ -64,16 +64,6 @@ contract FlashBot is Ownable {
     event BaseAssetAdded(address indexed token);
     event BaseAssetRemoved(address indexed token);
 
-    modifier validatePair(address pool0, address pool1) {
-        require(pool0 != pool1, 'Same pair address');
-        (address pool0Token0, address pool0Token1) = (IUniswapV2Pair(pool0).token0(), IUniswapV2Pair(pool0).token1());
-        (address pool1Token0, address pool1Token1) = (IUniswapV2Pair(pool1).token0(), IUniswapV2Pair(pool1).token1());
-        require(pool0Token0 == pool1Token0, 'Require same token0');
-        require(pool0Token1 == pool1Token1, 'Require same token1');
-        require(baseAssetsContains(pool0Token0) || baseAssetsContains(pool0Token1), 'No base asset in pair');
-        _;
-    }
-
     constructor(address _WETH) {
         WETH = _WETH;
         baseAssets.add(_WETH);
@@ -113,13 +103,8 @@ contract FlashBot is Ownable {
         )
     {
         require(pool0 != pool1, 'Same pair address');
-        (address pool0Token0, address pool0Token1, address pool1Token0, address pool1Token1) =
-            (
-                IUniswapV2Pair(pool0).token0(),
-                IUniswapV2Pair(pool0).token1(),
-                IUniswapV2Pair(pool1).token0(),
-                IUniswapV2Pair(pool1).token1()
-            );
+        (address pool0Token0, address pool0Token1) = (IUniswapV2Pair(pool0).token0(), IUniswapV2Pair(pool0).token1());
+        (address pool1Token0, address pool1Token1) = (IUniswapV2Pair(pool1).token0(), IUniswapV2Pair(pool1).token1());
         require(pool0Token0 < pool0Token1 && pool1Token0 < pool1Token1, 'Non standard uniswap AMM pair');
         require(pool0Token0 == pool1Token0 && pool0Token1 == pool1Token1, 'Require same token pair');
         require(baseAssetsContains(pool0Token0) || baseAssetsContains(pool0Token1), 'No base asset in pair');
@@ -131,7 +116,7 @@ contract FlashBot is Ownable {
 
     /// @notice Do an arbitrage between two Uniswap-like AMM pools
     /// @dev Two pools must contains same token pair
-    function flashArbitrage(address pool0, address pool1) external validatePair(pool0, pool1) {
+    function flashArbitrage(address pool0, address pool1) external {
         ArbitrageInfo memory info;
         (info.baseTokenSmaller, info.baseToken, info.quoteToken) = isbaseTokenSmaller(pool0, pool1);
 
