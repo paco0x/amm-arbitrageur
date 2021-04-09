@@ -27,8 +27,8 @@ struct PoolReserves {
 }
 
 struct ArbitrageData {
-    address lowerPool;
-    address higherPool;
+    address lowerPool; // pool with lower price, denominated in quote asset
+    address higherPool; // pool with higher price, denominated in quote asset
     uint256 lowerPoolReserveIn;
     uint256 lowerPoolReserveOut;
     uint256 higherPoolReserveIn;
@@ -37,7 +37,7 @@ struct ArbitrageData {
 }
 
 struct CallbackData {
-    bool debtAssetSmaller;
+    bool debtTokenSmaller;
     uint256 debtAmount;
     address debtPool;
     address targetPool;
@@ -176,7 +176,7 @@ contract FlashBot is Ownable {
 
             // can only initialize this way to avoid stack too deep error
             CallbackData memory callbackData;
-            callbackData.debtAssetSmaller = baseAssetSmaller;
+            callbackData.debtTokenSmaller = baseAssetSmaller;
             callbackData.debtAmount = debtAmount;
             callbackData.debtPool = info.lowerPool;
             callbackData.targetPool = info.higherPool;
@@ -193,6 +193,7 @@ contract FlashBot is Ownable {
         if (baseToken == WETH) {
             IWETH(baseToken).withdraw(balanceAfter);
         }
+        permissionedPairAddress = address(1);
     }
 
     function uniswapV2Call(
@@ -212,11 +213,11 @@ contract FlashBot is Ownable {
         require(amountOut > info.debtAmount, 'Arbitrage fail, not profit');
 
         address borrowedToken =
-            info.debtAssetSmaller ? IUniswapV2Pair(info.targetPool).token1() : IUniswapV2Pair(info.targetPool).token0();
+            info.debtTokenSmaller ? IUniswapV2Pair(info.targetPool).token1() : IUniswapV2Pair(info.targetPool).token0();
         IERC20(borrowedToken).safeTransfer(info.targetPool, borrowedAmount);
 
         (uint256 amount0Out, uint256 amount1Out) =
-            info.debtAssetSmaller ? (amountOut, uint256(0)) : (uint256(0), amountOut);
+            info.debtTokenSmaller ? (amountOut, uint256(0)) : (uint256(0), amountOut);
         IUniswapV2Pair(info.targetPool).swap(amount0Out, amount1Out, address(this), new bytes(0));
 
         IERC20(borrowedToken).safeTransfer(info.debtPool, info.debtAmount);
