@@ -19,13 +19,6 @@ struct OrderedReserves {
     uint256 b2;
 }
 
-struct PoolReserves {
-    uint256 pool0Reserve0;
-    uint256 pool0Reserve1;
-    uint256 pool1Reserve0;
-    uint256 pool1Reserve1;
-}
-
 struct ArbitrageInfo {
     address baseToken;
     address quoteToken;
@@ -58,15 +51,15 @@ contract FlashBot is Ownable {
     address WETH;
 
     // AVAILABLE BASE TOKENS
-    EnumerableSet.AddressSet baseAssets;
+    EnumerableSet.AddressSet baseTokens;
 
     event Withdrawn(address indexed to, uint256 indexed value);
-    event BaseAssetAdded(address indexed token);
-    event BaseAssetRemoved(address indexed token);
+    event BaseTokenAdded(address indexed token);
+    event BaseTokenRemoved(address indexed token);
 
     constructor(address _WETH) {
         WETH = _WETH;
-        baseAssets.add(_WETH);
+        baseTokens.add(_WETH);
     }
 
     receive() external payable {}
@@ -77,20 +70,37 @@ contract FlashBot is Ownable {
             payable(owner()).transfer(balance);
             emit Withdrawn(owner(), balance);
         }
+
+        for (uint256 i = 0; i < baseTokens.length(); i++) {
+            address token = baseTokens.at(i);
+            balance = IERC20(token).balanceOf(address(this));
+            if (balance > 0) {
+                // do not use safe transfer here to prevents revert by any shitty token
+                IERC20(token).transfer(owner(), balance);
+            }
+        }
     }
 
-    function addBaseAsset(address token) external onlyOwner {
-        baseAssets.add(token);
-        emit BaseAssetAdded(token);
+    function addBaseToken(address token) external onlyOwner {
+        baseTokens.add(token);
+        emit BaseTokenAdded(token);
     }
 
-    function removeBaseAsset(address token) external onlyOwner {
-        baseAssets.remove(token);
-        emit BaseAssetRemoved(token);
+    function removeBaseToken(address token) external onlyOwner {
+        baseTokens.remove(token);
+        emit BaseTokenRemoved(token);
     }
 
-    function baseAssetsContains(address token) public view returns (bool) {
-        return baseAssets.contains(token);
+    function getBaseTokens() external view returns (address[] memory tokens) {
+        uint256 length = baseTokens.length();
+        tokens = new address[](length);
+        for (uint256 i = 0; i < length; i++) {
+            tokens[i] = baseTokens.at(i);
+        }
+    }
+
+    function baseTokensContains(address token) public view returns (bool) {
+        return baseTokens.contains(token);
     }
 
     function isbaseTokenSmaller(address pool0, address pool1)
@@ -107,11 +117,51 @@ contract FlashBot is Ownable {
         (address pool1Token0, address pool1Token1) = (IUniswapV2Pair(pool1).token0(), IUniswapV2Pair(pool1).token1());
         require(pool0Token0 < pool0Token1 && pool1Token0 < pool1Token1, 'Non standard uniswap AMM pair');
         require(pool0Token0 == pool1Token0 && pool0Token1 == pool1Token1, 'Require same token pair');
-        require(baseAssetsContains(pool0Token0) || baseAssetsContains(pool0Token1), 'No base asset in pair');
+        require(baseTokensContains(pool0Token0) || baseTokensContains(pool0Token1), 'No base asset in pair');
 
-        (baseSmaller, baseToken, quoteToken) = baseAssetsContains(pool0Token0)
+        (baseSmaller, baseToken, quoteToken) = baseTokensContains(pool0Token0)
             ? (true, pool0Token0, pool0Token1)
             : (false, pool0Token1, pool0Token0);
+    }
+
+    /// @dev Compare price denominated in quote asset between two pools
+    /// We borrow base asset by using flash swap from lower price pool and sell them to higher price pool
+    function getOrderedReserves(
+        address pool0,
+        address pool1,
+        bool baseTokenSmaller
+    )
+        internal
+        view
+        returns (
+            address lowerPool,
+            address higherPool,
+            OrderedReserves memory orderedReserves
+        )
+    {
+        (uint256 pool0Reserve0, uint256 pool0Reserve1, ) = IUniswapV2Pair(pool0).getReserves();
+        (uint256 pool1Reserve0, uint256 pool1Reserve1, ) = IUniswapV2Pair(pool1).getReserves();
+
+        // Calculate the price denominated in quote asset token
+        (Decimal.D256 memory price0, Decimal.D256 memory price1) =
+            baseTokenSmaller
+                ? (Decimal.from(pool0Reserve0).div(pool0Reserve1), Decimal.from(pool1Reserve0).div(pool1Reserve1))
+                : (Decimal.from(pool0Reserve1).div(pool0Reserve0), Decimal.from(pool1Reserve1).div(pool1Reserve0));
+
+        // get a1, b1, a2, b2 with following rule:
+        // 1. (a1, b1) represents the pool with lower price,
+        // 2. (a1, a2) is the base asset in two pools
+        if (price0.lessThan(price1)) {
+            (lowerPool, higherPool) = (pool0, pool1);
+            (orderedReserves.a1, orderedReserves.a2, orderedReserves.b1, orderedReserves.b2) = baseTokenSmaller
+                ? (pool0Reserve0, pool0Reserve1, pool1Reserve0, pool1Reserve1)
+                : (pool0Reserve1, pool0Reserve0, pool1Reserve1, pool1Reserve0);
+        } else {
+            (lowerPool, higherPool) = (pool1, pool0);
+            (orderedReserves.a1, orderedReserves.a2, orderedReserves.b1, orderedReserves.b2) = baseTokenSmaller
+                ? (pool1Reserve0, pool1Reserve1, pool0Reserve0, pool0Reserve1)
+                : (pool1Reserve1, pool1Reserve0, pool0Reserve1, pool0Reserve0);
+        }
     }
 
     /// @notice Do an arbitrage between two Uniswap-like AMM pools
@@ -120,40 +170,8 @@ contract FlashBot is Ownable {
         ArbitrageInfo memory info;
         (info.baseTokenSmaller, info.baseToken, info.quoteToken) = isbaseTokenSmaller(pool0, pool1);
 
-        PoolReserves memory reserves;
-        (reserves.pool0Reserve0, reserves.pool0Reserve1, ) = IUniswapV2Pair(pool0).getReserves();
-        (reserves.pool1Reserve0, reserves.pool1Reserve1, ) = IUniswapV2Pair(pool1).getReserves();
-
-        // Calculate the price denominated in quote asset token
-        (Decimal.D256 memory price0, Decimal.D256 memory price1) =
-            info.baseTokenSmaller
-                ? (
-                    Decimal.from(reserves.pool0Reserve0).div(reserves.pool0Reserve1),
-                    Decimal.from(reserves.pool1Reserve0).div(reserves.pool1Reserve1)
-                )
-                : (
-                    Decimal.from(reserves.pool0Reserve1).div(reserves.pool0Reserve0),
-                    Decimal.from(reserves.pool1Reserve1).div(reserves.pool1Reserve0)
-                );
-
-        // Compare price denominated in quote asset between two pools
-        // We borrow base asset by using flash swap from lower price pool and sell them to higher price pool
         OrderedReserves memory orderedReserves;
-
-        // get a1, b1, a2, b2 with following rule:
-        // 1. (a1, b1) represents the pool with lower price,
-        // 2. (a1, a2) is the base asset reserves in two pools
-        if (price0.lessThan(price1)) {
-            (info.lowerPool, info.higherPool) = (pool0, pool1);
-            (orderedReserves.a1, orderedReserves.a2, orderedReserves.b1, orderedReserves.b2) = info.baseTokenSmaller
-                ? (reserves.pool0Reserve0, reserves.pool0Reserve1, reserves.pool1Reserve0, reserves.pool1Reserve1)
-                : (reserves.pool0Reserve1, reserves.pool0Reserve0, reserves.pool1Reserve1, reserves.pool1Reserve0);
-        } else {
-            (info.lowerPool, info.higherPool) = (pool1, pool0);
-            (orderedReserves.a1, orderedReserves.a2, orderedReserves.b1, orderedReserves.b2) = info.baseTokenSmaller
-                ? (reserves.pool1Reserve0, reserves.pool1Reserve1, reserves.pool0Reserve0, reserves.pool0Reserve1)
-                : (reserves.pool1Reserve1, reserves.pool1Reserve0, reserves.pool0Reserve1, reserves.pool0Reserve0);
-        }
+        (info.lowerPool, info.higherPool, orderedReserves) = getOrderedReserves(pool0, pool1, info.baseTokenSmaller);
 
         // this must be updated every transaction for callback origin authentication
         permissionedPairAddress = info.lowerPool;
@@ -225,7 +243,11 @@ contract FlashBot is Ownable {
         int256 b = 2 * b1 * b2 * (a1 + a2);
         int256 c = b1 * b2 * (a1 * b2 - a2 * b1);
 
-        return calcSolutionForQuadratic(a, b, c);
+        (int256 x1, int256 x2) = calcSolutionForQuadratic(a, b, c);
+
+        // 0 < x < b1 and 0 < x < b2
+        assert((x1 > 0 && x1 < b1 && x1 < b2) || (x1 > 0 && x1 < b1 && x1 < b2));
+        amount = (x1 > 0 && x1 < b1 && x1 < b2) ? uint256(x1) : uint256(x2);
     }
 
     /// @dev find solution of quadratic equation: ax^2 + bx + c = 0, only return the positive solution
@@ -233,17 +255,14 @@ contract FlashBot is Ownable {
         int256 a,
         int256 b,
         int256 c
-    ) internal pure returns (uint256 x) {
+    ) internal pure returns (int256 x1, int256 x2) {
         int256 m = b**2 - 4 * a * c;
         // m < 0 leads to complex number
         assert(m > 0);
 
         int256 sqrtM = int256(sqrt(uint256(m)));
-        int256 x1 = (-b + sqrtM) / (2 * a);
-        int256 x2 = (-b - sqrtM) / (2 * a);
-        // at least a positive result
-        assert(x1 > 0 || x2 > 0);
-        x = x1 > 0 ? uint256(x1) : uint256(x2);
+        x1 = (-b + sqrtM) / (2 * a);
+        x2 = (-b - sqrtM) / (2 * a);
     }
 
     /// @dev Newton’s method for caculating square root of n

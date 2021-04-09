@@ -4,10 +4,17 @@
         "module": "commonjs",
         "strict": true,
         "esModuleInterop": true,
-        "outDir": "dist"
+        "outDir": "dist",
+        "typeRoots": [
+            "./typechain",
+            "./node_modules/@types"
+        ],
+        "types": [
+            "@nomiclabs/hardhat-ethers",
+            "@nomiclabs/hardhat-waffle"
+        ]
     },
     "include": [
-        "./scripts",
         "./test"
     ],
     "files": [

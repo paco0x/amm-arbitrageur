@@ -597,6 +597,16 @@
   dependencies:
     ethers "^5.0.2"
 
+"@typechain/ethers-v5@^6.0.5":
+  version "6.0.5"
+  resolved "https://registry.npm.taobao.org/@typechain/ethers-v5/download/@typechain/ethers-v5-6.0.5.tgz#39bbf9baadd0e8d9efad9d16c60152b7cd9a467b"
+  integrity sha1-Obv5uq3Q6NnvrZ0WxgFSt82aRns=
+
+"@typechain/hardhat@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.npm.taobao.org/@typechain/hardhat/download/@typechain/hardhat-1.0.1.tgz#6e53956c15b2aff073413cfcdb3f5339b0a85f2e"
+  integrity sha1-blOVbBWyr/BzQTz82z9TObCoXy4=
+
 "@types/bn.js@*", "@types/bn.js@^5.1.0":
   version "5.1.0"
   resolved "https://registry.npm.taobao.org/@types/bn.js/download/@types/bn.js-5.1.0.tgz#32c5d271503a12653c62cf4d2b45e6eab8cebc68"
@@ -6720,6 +6730,11 @@ ts-essentials@^6.0.3:
   resolved "https://registry.npm.taobao.org/ts-essentials/download/ts-essentials-6.0.7.tgz#5f4880911b7581a873783740ce8b94da163d18a6"
   integrity sha1-X0iAkRt1gahzeDdAzouU2hY9GKY=
 
+ts-essentials@^7.0.1:
+  version "7.0.1"
+  resolved "https://registry.npm.taobao.org/ts-essentials/download/ts-essentials-7.0.1.tgz#d205508cae0cdadfb73c89503140cf2228389e2d"
+  integrity sha1-0gVQjK4M2t+3PIlQMUDPIig4ni0=
+
 ts-generator@^0.1.1:
   version "0.1.1"
   resolved "https://registry.npm.taobao.org/ts-generator/download/ts-generator-0.1.1.tgz#af46f2fb88a6db1f9785977e9590e7bcd79220ab"
@@ -6823,6 +6838,19 @@ typechain@^3.0.0:
     js-sha3 "^0.8.0"
     lodash "^4.17.15"
     ts-essentials "^6.0.3"
+    ts-generator "^0.1.1"
+
+typechain@^4.0.3:
+  version "4.0.3"
+  resolved "https://registry.npm.taobao.org/typechain/download/typechain-4.0.3.tgz#e8fcd6c984676858c64eeeb155ea783a10b73779"
+  integrity sha1-6PzWyYRnaFjGTu6xVep4OhC3N3k=
+  dependencies:
+    command-line-args "^4.0.7"
+    debug "^4.1.1"
+    fs-extra "^7.0.0"
+    js-sha3 "^0.8.0"
+    lodash "^4.17.15"
+    ts-essentials "^7.0.1"
     ts-generator "^0.1.1"
 
 typedarray-to-buffer@^3.1.5:
