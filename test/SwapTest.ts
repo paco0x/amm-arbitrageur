@@ -20,7 +20,7 @@ describe('Flashswap', () => {
     flashBot = (await fbFactory.deploy(WBNB)) as FlashBot;
   });
 
-  describe('falashswap arbitrage', () => {
+  describe('flash swap arbitrage', () => {
     let signer: SignerWithAddress;
 
     const uniFactoryAbi = ['function getPair(address, address) view returns (address pair)'];
@@ -63,8 +63,9 @@ describe('Flashswap', () => {
       await weth.transfer(mdexPairAddr, amountEth);
       await mdexPair.connect(signer).sync();
 
-      const profit = await flashBot.getProfit(mdexPairAddr, pancakePairAddr);
-      expect(profit).to.be.gt(ethers.utils.parseEther('500'));
+      const res = await flashBot.getProfit(mdexPairAddr, pancakePairAddr);
+      expect(res.profit).to.be.gt(ethers.utils.parseEther('500'));
+      expect(res.baseToken).to.be.eq(WBNB);
     });
 
     it('revert if callback is called from address without permission', async () => {

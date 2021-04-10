@@ -22,7 +22,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       // loggingEnabled: true,
       forking: {
-        url: 'https://bsc-dataseed3.binance.org/',
+        url: 'https://bsc-dataseed.binance.org/',
         enabled: true,
       },
       accounts: {

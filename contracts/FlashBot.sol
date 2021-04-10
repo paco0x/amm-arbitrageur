@@ -250,8 +250,10 @@ contract FlashBot is Ownable {
     }
 
     /// @notice Calculate how much profit we can by arbitraging between two pools
-    function getProfit(address pool0, address pool1) external view returns (uint256 profit) {
+    function getProfit(address pool0, address pool1) external view returns (uint256 profit, address baseToken) {
         (bool baseTokenSmaller, , ) = isbaseTokenSmaller(pool0, pool1);
+        baseToken = baseTokenSmaller ? IUniswapV2Pair(pool0).token0() : IUniswapV2Pair(pool0).token1();
+
         (, , OrderedReserves memory orderedReserves) = getOrderedReserves(pool0, pool1, baseTokenSmaller);
 
         uint256 borrowAmount = calcBorrowAmount(orderedReserves);
