@@ -85,6 +85,6 @@ $ yarn run bot
 - [MDEX](https://bsc.mdex.com/)
 - [BakerySwap](https://www.bakeryswap.org/#/swap)
 - [JulSwap](https://julswap.com/#/)
-- [ValueDeFi](https://bsc.valuedefi.io/)
+- [~~ValueDeFi~~](https://bsc.valuedefi.io/) （暂不支持）
 
 
