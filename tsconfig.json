@@ -16,6 +16,7 @@
     },
     "include": [
         "./scripts",
+        "./bot",
         "./test"
     ],
     "files": [
