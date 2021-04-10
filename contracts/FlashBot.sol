@@ -64,6 +64,8 @@ contract FlashBot is Ownable {
 
     receive() external payable {}
 
+    /// @dev Redirect uniswap callback function
+    /// The callback function on different DEX are not same, so use a fallback to redirect to uniswapV2Call
     fallback(bytes calldata _input) external returns (bytes memory) {
         (address sender, uint256 amount0, uint256 amount1, bytes memory data) = abi.decode(_input[4:], (address, uint256, uint256, bytes));
         uniswapV2Call(sender, amount0, amount1, data);
@@ -127,15 +129,15 @@ contract FlashBot is Ownable {
         (address pool1Token0, address pool1Token1) = (IUniswapV2Pair(pool1).token0(), IUniswapV2Pair(pool1).token1());
         require(pool0Token0 < pool0Token1 && pool1Token0 < pool1Token1, 'Non standard uniswap AMM pair');
         require(pool0Token0 == pool1Token0 && pool0Token1 == pool1Token1, 'Require same token pair');
-        require(baseTokensContains(pool0Token0) || baseTokensContains(pool0Token1), 'No base asset in pair');
+        require(baseTokensContains(pool0Token0) || baseTokensContains(pool0Token1), 'No base token in pair');
 
         (baseSmaller, baseToken, quoteToken) = baseTokensContains(pool0Token0)
             ? (true, pool0Token0, pool0Token1)
             : (false, pool0Token1, pool0Token0);
     }
 
-    /// @dev Compare price denominated in quote asset between two pools
-    /// We borrow base asset by using flash swap from lower price pool and sell them to higher price pool
+    /// @dev Compare price denominated in quote token between two pools
+    /// We borrow base token by using flash swap from lower price pool and sell them to higher price pool
     function getOrderedReserves(
         address pool0,
         address pool1,
@@ -172,8 +174,8 @@ contract FlashBot is Ownable {
                 ? (pool1Reserve0, pool1Reserve1, pool0Reserve0, pool0Reserve1)
                 : (pool1Reserve1, pool1Reserve0, pool0Reserve1, pool0Reserve0);
         }
-        console.log("Borrow from pool:", lowerPool);
-        console.log("Sell to pool:", higherPool);
+        console.log('Borrow from pool:', lowerPool);
+        console.log('Sell to pool:', higherPool);
     }
 
     /// @notice Do an arbitrage between two Uniswap-like AMM pools
@@ -200,7 +202,7 @@ contract FlashBot is Ownable {
             // sell borrowed quote token on higher price pool, calculate how much base token we can get
             uint256 baseTokenOutAmount = getAmountOut(borrowAmount, orderedReserves.b2, orderedReserves.a2);
             require(baseTokenOutAmount > debtAmount, 'Arbitrage fail, no profit');
-            console.log("Profit:", (baseTokenOutAmount - debtAmount) / 1 ether);
+            console.log('Profit:', (baseTokenOutAmount - debtAmount) / 1 ether);
 
             // can only initialize this way to avoid stack too deep error
             CallbackData memory callbackData;
@@ -247,14 +249,31 @@ contract FlashBot is Ownable {
         IERC20(info.debtToken).safeTransfer(info.debtPool, info.debtAmount);
     }
 
+    /// @notice Calculate how much profit we can by arbitraging between two pools
+    function getProfit(address pool0, address pool1) external view returns (uint256 profit) {
+        (bool baseTokenSmaller, , ) = isbaseTokenSmaller(pool0, pool1);
+        (, , OrderedReserves memory orderedReserves) = getOrderedReserves(pool0, pool1, baseTokenSmaller);
+
+        uint256 borrowAmount = calcBorrowAmount(orderedReserves);
+        // borrow quote token on lower price pool,
+        uint256 debtAmount = getAmountIn(borrowAmount, orderedReserves.a1, orderedReserves.b1);
+        // sell borrowed quote token on higher price pool
+        uint256 baseTokenOutAmount = getAmountOut(borrowAmount, orderedReserves.b2, orderedReserves.a2);
+        if (baseTokenOutAmount < debtAmount) {
+            profit = 0;
+        } else {
+            profit = baseTokenOutAmount - debtAmount;
+        }
+    }
+
     /// @dev calculate the maximum base asset amount to borrow in order to get maximum profit during arbitrage
     function calcBorrowAmount(OrderedReserves memory reserves) internal pure returns (uint256 amount) {
-        // we can't use a1,b1,a2,b2 directly, because it will result overflow/underflow of the intermediate result
+        // we can't use a1,b1,a2,b2 directly, because it will result overflow/underflow on the intermediate result
         // so we:
         //    1. divide all the numbers by d to prevent from overflow/underflow
-        //    2. calculate the result use above numbers
-        //    3. multiple d with the result to get the final result
-        // note this workaround is only suitable for ERC20 token with 18 decimals, which I believe most tokens do
+        //    2. calculate the result by using above numbers
+        //    3. multiply d with the result to get the final result
+        // Note: this workaround is only suitable for ERC20 token with 18 decimals, which I believe most tokens do
 
         uint256 min1 = reserves.a1 < reserves.b1 ? reserves.a1 : reserves.b1;
         uint256 min2 = reserves.a2 < reserves.b2 ? reserves.a2 : reserves.b2;

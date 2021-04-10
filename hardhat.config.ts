@@ -20,6 +20,7 @@ const config: HardhatUserConfig = {
   solidity: { version: '0.7.6' },
   networks: {
     hardhat: {
+      // loggingEnabled: true,
       forking: {
         url: 'https://bsc-dataseed3.binance.org/',
         enabled: true,
