@@ -11,7 +11,6 @@ import 'hardhat/console.sol';
 import './interfaces/IUniswapV2Pair.sol';
 import './interfaces/IWETH.sol';
 import './libraries/Decimal.sol';
-// import './libraries/SafeMath.sol';
 
 struct OrderedReserves {
     uint256 a1; // base asset
@@ -93,6 +92,11 @@ contract FlashBot is Ownable {
     }
 
     function removeBaseToken(address token) external onlyOwner {
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        if (balance > 0) {
+            // do not use safe transfer to prevents revert by any shitty token
+            IERC20(token).transfer(owner(), balance);
+        }
         baseTokens.remove(token);
         emit BaseTokenRemoved(token);
     }
@@ -256,6 +260,7 @@ contract FlashBot is Ownable {
         uint256 min2 = reserves.a2 < reserves.b2 ? reserves.a2 : reserves.b2;
         uint256 min = min1 < min2 ? min1 : min2;
 
+        // choose appropriate number to divide based on the minimum number
         uint256 d;
         if (min > 1e24) {
             d = 1e20;
