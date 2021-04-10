@@ -458,10 +458,10 @@
     "@types/sinon-chai" "^3.2.3"
     "@types/web3" "1.0.19"
 
-"@openzeppelin/contracts@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.npm.taobao.org/@openzeppelin/contracts/download/@openzeppelin/contracts-4.0.0.tgz#54d1de30911635020c383cb73b160b698e7ae179"
-  integrity sha1-VNHeMJEWNQIMODy3OxYLaY564Xk=
+"@openzeppelin/contracts@3.4.0":
+  version "3.4.0"
+  resolved "https://registry.npm.taobao.org/@openzeppelin/contracts/download/@openzeppelin/contracts-3.4.0.tgz#9a1669ad5f9fdfb6e273bb5a4fed10cb4cc35eb0"
+  integrity sha1-mhZprV+f37bic7taT+0Qy0zDXrA=
 
 "@resolver-engine/core@^0.3.3":
   version "0.3.3"

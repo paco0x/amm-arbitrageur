@@ -1,16 +1,17 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
-import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import '@openzeppelin/contracts/utils/EnumerableSet.sol';
 import 'hardhat/console.sol';
 
 import './interfaces/IUniswapV2Pair.sol';
 import './interfaces/IWETH.sol';
 import './libraries/Decimal.sol';
-import './libraries/SafeMath.sol';
+// import './libraries/SafeMath.sol';
 
 struct OrderedReserves {
     uint256 a1; // base asset
@@ -48,7 +49,7 @@ contract FlashBot is Ownable {
     address permissionedPairAddress = address(1);
 
     // WETH on ETH or WBNB on BSC
-    address WETH;
+    address immutable WETH;
 
     // AVAILABLE BASE TOKENS
     EnumerableSet.AddressSet baseTokens;
@@ -63,6 +64,11 @@ contract FlashBot is Ownable {
     }
 
     receive() external payable {}
+
+    fallback(bytes calldata _input) external returns (bytes memory) {
+        (address sender, uint256 amount0, uint256 amount1, bytes memory data) = abi.decode(_input[4:], (address, uint256, uint256, bytes));
+        uniswapV2Call(sender, amount0, amount1, data);
+    }
 
     function withdraw() external {
         uint256 balance = address(this).balance;
@@ -149,19 +155,21 @@ contract FlashBot is Ownable {
                 : (Decimal.from(pool0Reserve1).div(pool0Reserve0), Decimal.from(pool1Reserve1).div(pool1Reserve0));
 
         // get a1, b1, a2, b2 with following rule:
-        // 1. (a1, b1) represents the pool with lower price,
-        // 2. (a1, a2) is the base asset in two pools
+        // 1. (a1, b1) represents the pool with lower price, denominated in quote asset token
+        // 2. (a1, a2) are the base tokens in two pools
         if (price0.lessThan(price1)) {
             (lowerPool, higherPool) = (pool0, pool1);
-            (orderedReserves.a1, orderedReserves.a2, orderedReserves.b1, orderedReserves.b2) = baseTokenSmaller
+            (orderedReserves.a1, orderedReserves.b1, orderedReserves.a2, orderedReserves.b2) = baseTokenSmaller
                 ? (pool0Reserve0, pool0Reserve1, pool1Reserve0, pool1Reserve1)
                 : (pool0Reserve1, pool0Reserve0, pool1Reserve1, pool1Reserve0);
         } else {
             (lowerPool, higherPool) = (pool1, pool0);
-            (orderedReserves.a1, orderedReserves.a2, orderedReserves.b1, orderedReserves.b2) = baseTokenSmaller
+            (orderedReserves.a1, orderedReserves.b1, orderedReserves.a2, orderedReserves.b2) = baseTokenSmaller
                 ? (pool1Reserve0, pool1Reserve1, pool0Reserve0, pool0Reserve1)
                 : (pool1Reserve1, pool1Reserve0, pool0Reserve1, pool0Reserve0);
         }
+        console.log("Borrow from pool:", lowerPool);
+        console.log("Sell to pool:", higherPool);
     }
 
     /// @notice Do an arbitrage between two Uniswap-like AMM pools
@@ -183,11 +191,12 @@ contract FlashBot is Ownable {
             uint256 borrowAmount = calcBorrowAmount(orderedReserves);
             (uint256 amount0Out, uint256 amount1Out) =
                 info.baseTokenSmaller ? (uint256(0), borrowAmount) : (borrowAmount, uint256(0));
-            // borrow quote token on lower price pool, calculate how much debt we need to pay in base token
+            // borrow quote token on lower price pool, calculate how much debt we need to pay demoninated in base token
             uint256 debtAmount = getAmountIn(borrowAmount, orderedReserves.a1, orderedReserves.b1);
             // sell borrowed quote token on higher price pool, calculate how much base token we can get
-            uint256 baseAssetOutAmount = getAmountOut(borrowAmount, orderedReserves.b2, orderedReserves.a2);
-            require(baseAssetOutAmount > debtAmount, 'Arbitrage fail, not profit');
+            uint256 baseTokenOutAmount = getAmountOut(borrowAmount, orderedReserves.b2, orderedReserves.a2);
+            require(baseTokenOutAmount > debtAmount, 'Arbitrage fail, no profit');
+            console.log("Profit:", (baseTokenOutAmount - debtAmount) / 1 ether);
 
             // can only initialize this way to avoid stack too deep error
             CallbackData memory callbackData;
@@ -197,7 +206,7 @@ contract FlashBot is Ownable {
             callbackData.borrowedToken = info.quoteToken;
             callbackData.debtToken = info.baseToken;
             callbackData.debtAmount = debtAmount;
-            callbackData.debtTokenOutAmount = baseAssetOutAmount;
+            callbackData.debtTokenOutAmount = baseTokenOutAmount;
 
             bytes memory data = abi.encode(callbackData);
             IUniswapV2Pair(info.lowerPool).swap(amount0Out, amount1Out, address(this), data);
@@ -216,8 +225,8 @@ contract FlashBot is Ownable {
         address sender,
         uint256 amount0,
         uint256 amount1,
-        bytes calldata data
-    ) external {
+        bytes memory data
+    ) public {
         // access control
         require(msg.sender == permissionedPairAddress, 'Non permissioned address call');
         require(sender == address(this), 'Not from this contract');
@@ -282,7 +291,7 @@ contract FlashBot is Ownable {
         (int256 x1, int256 x2) = calcSolutionForQuadratic(a, b, c);
 
         // 0 < x < b1 and 0 < x < b2
-        require((x1 > 0 && x1 < b1 && x1 < b2) || (x1 > 0 && x1 < b1 && x1 < b2), "Wrong input order");
+        require((x1 > 0 && x1 < b1 && x1 < b2) || (x1 > 0 && x1 < b1 && x1 < b2), 'Wrong input order');
         amount = (x1 > 0 && x1 < b1 && x1 < b2) ? uint256(x1) * d : uint256(x2) * d;
     }
 
@@ -294,7 +303,7 @@ contract FlashBot is Ownable {
     ) internal pure returns (int256 x1, int256 x2) {
         int256 m = b**2 - 4 * a * c;
         // m < 0 leads to complex number
-        assert(m > 0);
+        require(m > 0, 'Complex number');
 
         int256 sqrtM = int256(sqrt(uint256(m)));
         x1 = (-b + sqrtM) / (2 * a);

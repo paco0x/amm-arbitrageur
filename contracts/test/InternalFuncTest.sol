@@ -1,9 +1,10 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import '../FlashBot.sol';
 
-contract TestMath is FlashBot {
+contract InternalFuncTest is FlashBot {
     constructor() FlashBot(address(1)) {}
 
     function _calcBorrowAmount(OrderedReserves memory reserves) public pure returns (uint256) {
