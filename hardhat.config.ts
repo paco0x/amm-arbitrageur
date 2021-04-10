@@ -1,20 +1,11 @@
 import '@typechain/hardhat';
 import { task, HardhatUserConfig } from 'hardhat/config';
 import '@nomiclabs/hardhat-waffle';
-import { version } from 'node:process';
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task('accounts', 'Prints the list of accounts', async (args, hre) => {
-  const accounts = await hre.ethers.getSigners();
+import deployer from './.secret';
 
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
-
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
+const BSC_RPC = 'https://bsc-dataseed.binance.org/';
+const BSC_Tetsnet_RPC = 'https://data-seed-prebsc-1-s1.binance.org:8545/';
 
 const config: HardhatUserConfig = {
   solidity: { version: '0.7.6' },
@@ -22,12 +13,22 @@ const config: HardhatUserConfig = {
     hardhat: {
       // loggingEnabled: true,
       forking: {
-        url: 'https://bsc-dataseed.binance.org/',
+        url: BSC_RPC,
         enabled: true,
       },
       accounts: {
         accountsBalance: '1000000000000000000000000', // 1 mil ether
       },
+    },
+    bscTestnet: {
+      url: BSC_Tetsnet_RPC,
+      chainId: 0x61,
+      accounts: [deployer.private],
+    },
+    bsc: {
+      url: BSC_RPC,
+      chainId: 0x38,
+      accounts: [deployer.private],
     },
   },
   mocha: {
