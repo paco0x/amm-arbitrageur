@@ -73,6 +73,12 @@
 
 Bot 需要在多个 AMM DEX 的多个代币对之间，调用 `getProfit()` 查询利润，一但利润满足设定的阈值，即可调用 `flashArbitrage(pool1, pool2)` 进行套利，获得的收益将保存在合约中。
 
+项目实现了 typescript 版本的 bot，运行方式：
+
+```bash
+$ yarn run bot
+```
+
 ## BSC 上可套利的 DEX
 
 - [PancakeSwap](https://pancakeswap.finance/)
