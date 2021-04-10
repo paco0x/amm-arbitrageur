@@ -127,7 +127,7 @@ async function main() {
 
       if (res.profit.gt(BigNumber.from('0'))) {
         const netProfit = await calcNetProfit(res.profit, res.baseToken, baseTokens);
-        if (netProfit < config.mininumProfit) {
+        if (netProfit < config.minimumProfit) {
           continue;
         }
 

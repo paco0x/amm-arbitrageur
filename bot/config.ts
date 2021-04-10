@@ -2,7 +2,7 @@ import { BigNumber, BigNumberish, utils } from 'ethers';
 
 interface Config {
   logLevel: string;
-  mininumProfit: number;
+  minimumProfit: number;
   gasPrice: BigNumber;
   gasLimit: BigNumberish;
   bscScanUrl: string;
@@ -16,7 +16,7 @@ const bscScanUrl = `https://api.bscscan.com/api?module=stats&action=bnbprice&api
 
 const config: Config = {
   logLevel: 'info',
-  mininumProfit: 50, // in USD
+  minimumProfit: 50, // in USD
   gasPrice: gasPrice,
   gasLimit: gasLimit,
   bscScanUrl: bscScanUrl,
