@@ -13,14 +13,12 @@
     "@typechain/ethers-v5": "^6.0.5",
     "@typechain/hardhat": "^1.0.1",
     "@types/chai": "^4.2.16",
-    "@types/lodash": "^4.14.168",
     "@types/mocha": "^8.2.2",
     "@types/node": "^14.14.37",
     "chai": "^4.3.4",
     "ethereum-waffle": "^3.0.0",
     "ethers": "^5.0.0",
     "hardhat": "^2.1.2",
-    "lodash": "^4.17.21",
     "prettier": "^2.2.1",
     "prettier-plugin-solidity": "^1.0.0-beta.7",
     "ts-generator": "^0.1.1",
@@ -30,7 +28,12 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "3.4.0",
+    "@ricokahler/pool": "^1.1.2",
+    "@types/async-lock": "^1.1.2",
+    "@types/lodash": "^4.14.168",
+    "async-lock": "^1.2.8",
     "axios": "^0.21.1",
+    "lodash": "^4.17.21",
     "lodash.combinations": "^18.10.0",
     "winston": "^3.3.3"
   }

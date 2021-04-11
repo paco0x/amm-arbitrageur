@@ -509,6 +509,11 @@
     path-browserify "^1.0.0"
     url "^0.11.0"
 
+"@ricokahler/pool@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.npm.taobao.org/@ricokahler/pool/download/@ricokahler/pool-1.1.2.tgz#042267f0c83a4133bb9bb0cfe295837cdbcf8c65"
+  integrity sha1-BCJn8Mg6QTO7m7DP4pWDfNvPjGU=
+
 "@sentry/core@5.30.0":
   version "5.30.0"
   resolved "https://registry.npm.taobao.org/@sentry/core/download/@sentry/core-5.30.0.tgz#6b203664f69e75106ee8b5a2fe1d717379b331f3"
@@ -615,6 +620,11 @@
   version "1.0.1"
   resolved "https://registry.npm.taobao.org/@typechain/hardhat/download/@typechain/hardhat-1.0.1.tgz#6e53956c15b2aff073413cfcdb3f5339b0a85f2e"
   integrity sha1-blOVbBWyr/BzQTz82z9TObCoXy4=
+
+"@types/async-lock@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.npm.taobao.org/@types/async-lock/download/@types/async-lock-1.1.2.tgz#cbc26a34b11b83b28f7783a843c393b443ef8bef"
+  integrity sha1-y8JqNLEbg7KPd4OoQ8OTtEPvi+8=
 
 "@types/bn.js@*", "@types/bn.js@^5.1.0":
   version "5.1.0"
@@ -965,6 +975,11 @@ async-limiter@~1.0.0:
   version "1.0.1"
   resolved "https://registry.npm.taobao.org/async-limiter/download/async-limiter-1.0.1.tgz#dd379e94f0db8310b08291f9d64c3209766617fd"
   integrity sha1-3TeelPDbgxCwgpH51kwyCXZmF/0=
+
+async-lock@^1.2.8:
+  version "1.2.8"
+  resolved "https://registry.npm.taobao.org/async-lock/download/async-lock-1.2.8.tgz#7b02bdfa2de603c0713acecd11184cf97bbc7c4c"
+  integrity sha1-ewK9+i3mA8BxOs7NERhM+Xu8fEw=
 
 async@2.6.2:
   version "2.6.2"

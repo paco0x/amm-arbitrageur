@@ -6,6 +6,7 @@ interface Config {
   gasPrice: BigNumber;
   gasLimit: BigNumberish;
   bscScanUrl: string;
+  concurrency: number;
 }
 
 const gasPrice = utils.parseUnits('10', 'gwei');
@@ -16,6 +17,7 @@ const bscScanUrl = `https://api.bscscan.com/api?module=stats&action=bnbprice&api
 
 const config: Config = {
   logLevel: 'info',
+  concurrency: 50,
   minimumProfit: 50, // in USD
   gasPrice: gasPrice,
   gasLimit: gasLimit,
