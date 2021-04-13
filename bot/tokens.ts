@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import 'lodash.combinations';
+import lodash from 'lodash';
 import { Contract } from '@ethersproject/contracts';
 import { ethers } from 'hardhat';
 

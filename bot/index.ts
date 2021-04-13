@@ -1,6 +1,5 @@
 import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
-import 'lodash.combinations';
 import pool from '@ricokahler/pool';
 import AsyncLock from 'async-lock';
 
