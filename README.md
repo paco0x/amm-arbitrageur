@@ -63,13 +63,15 @@
 最后求出满足条件的 x 值，即为我们需要借贷的 Quote Token 数量。
 
 ## 部署合约
-拷贝私钥配置文件：
+1. 编辑 `hardhat.config.ts` 中的网络配置。（目前都是 BSC 的地址）。
+
+2. 拷贝私钥配置文件：
 
 ```bash
 $ cp .secret.ts.sample .secret.ts
 ```
 
-填入部署账户的私钥和地址信息。
+3. 填入部署账户的私钥和地址信息。运行脚本部署合约：
 
 
 ```bash
@@ -97,4 +99,8 @@ $ yarn run bot
 - [JulSwap](https://julswap.com/#/)
 - [~~ValueDeFi~~](https://bsc.valuedefi.io/) （暂不支持）
 
+## 运行 UT
 
+```bash
+$ hardhat test
+```
