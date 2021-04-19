@@ -62,6 +62,21 @@
 
 最后求出满足条件的 x 值，即为我们需要借贷的 Quote Token 数量。
 
+## 部署合约
+拷贝私钥配置文件：
+
+```bash
+$ cp .secret.ts.sample .secret.ts
+```
+
+填入部署账户的私钥和地址信息。
+
+
+```bash
+$ hardhart --network XXX run scripts/deploy.ts
+
+```
+
 ## Bot
 
 合约提供了 `getProfit(address pool1, address pool2)` 接口，可以计算出两个交易对之间套利的最大利润（以 Base Tokne计价）。
