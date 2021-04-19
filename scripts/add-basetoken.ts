@@ -1,11 +1,11 @@
-import { ethers, run } from 'hardhat';
+import { ethers } from 'hardhat';
 import { FlashBot } from '../typechain/FlashBot';
 
 async function main(token: string) {
   const [signer] = await ethers.getSigners();
   const flashBot: FlashBot = (await ethers.getContractAt(
     'FlashBot',
-    '0x1A4F45df12e1DB2b6A2b89650F159792d1d62Df1',
+    'CONTRACT_ADDR', // your contract address
     signer
   )) as FlashBot;
 
