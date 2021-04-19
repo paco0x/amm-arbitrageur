@@ -1,6 +1,7 @@
 import { BigNumber, BigNumberish, utils } from 'ethers';
 
 interface Config {
+  contractAddr: string;
   logLevel: string;
   minimumProfit: number;
   gasPrice: BigNumber;
@@ -9,13 +10,15 @@ interface Config {
   concurrency: number;
 }
 
+const contractAddr = '0xXXXXXXXXXXXXXXXXXXXXXX'; // flash bot contract address
 const gasPrice = utils.parseUnits('10', 'gwei');
 const gasLimit = 300000;
 
-const bscScanApiKey = 'KRWR1F3EYS1BAHUBTPAGKST4EQE9K1D7U9';
+const bscScanApiKey = 'XXXXXXXXXXXXXXXX'; // bscscan API key
 const bscScanUrl = `https://api.bscscan.com/api?module=stats&action=bnbprice&apikey=${bscScanApiKey}`;
 
 const config: Config = {
+  contractAddr: contractAddr,
   logLevel: 'info',
   concurrency: 50,
   minimumProfit: 50, // in USD
