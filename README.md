@@ -1,6 +1,6 @@
 # AMM Arbitrageur
 
-An arbitrageur contract can be used to argitrage between Uniswap V2 like AMMs. For Chinese: [中文说明](./blob/master/README-cn.md)
+An arbitrageur contract can be used to argitrage between Uniswap V2 like AMMs. For Chinese: [中文说明](./README-cn.md)
 
 ## The rationale
 
