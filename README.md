@@ -1,6 +1,6 @@
 # AMM Arbitrageur
 
-An arbitrageur contract can be used to argitrage between Uniswap V2 like AMMs. 中文说明见：[](./blob/master/README-cn.md)
+An arbitrageur contract can be used to argitrage between Uniswap V2 like AMMs. For Chinese: [中文说明](./blob/master/README-cn.md)
 
 ## The rationale
 
@@ -110,7 +110,7 @@ $ yarn run bot
 - [MDEX](https://bsc.mdex.com/)
 - [BakerySwap](https://www.bakeryswap.org/#/swap)
 - [JulSwap](https://julswap.com/#/)
-- [~~ValueDeFi~~](https://bsc.valuedefi.io/) （暂不支持）
+- [~~ValueDeFi~~](https://bsc.valuedefi.io/)(Not supported)
 
 ## Run UT
 
