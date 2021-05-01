@@ -1,9 +1,11 @@
 import { ethers, run } from 'hardhat';
 
+import deployer from '../.secret';
+
 async function main() {
   await run('compile');
   const FlashBot = await ethers.getContractFactory('FlashBot');
-  const flashBot = await FlashBot.deploy('ADDR'); // deployer address
+  const flashBot = await FlashBot.deploy(deployer.address);
 
   console.log(`FlashBot deployed to ${flashBot.address}`);
 }
