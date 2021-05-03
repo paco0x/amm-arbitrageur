@@ -53,7 +53,7 @@ describe('MathTest', () => {
       const input = lodash.mapValues(reserves, (v) => ethers.utils.parseEther(v));
       const res = await flashBot._calcBorrowAmount(input);
       // @ts-ignore
-      expect(res).to.be.closeTo(ethers.utils.parseEther('0.45'), ethers.utils.parseEther('0.1'));
+      expect(res).to.be.closeTo(ethers.utils.parseEther('0.45'), ethers.utils.parseEther('0.01'));
     });
 
     it('returns right amount with large liquidity pairs', async () => {
@@ -64,12 +64,12 @@ describe('MathTest', () => {
       expect(res).to.be.closeTo(ethers.utils.parseEther('53052.8604'), ethers.utils.parseEther('1500'));
     });
 
-    it('returns right amount with high difference liquidity pairs', async () => {
+    it('returns right amount with big difference between liquidity pairs', async () => {
       const reserves = { a1: '1200000000', b1: '600000', a2: '100000', b2: '30' };
       const input = lodash.mapValues(reserves, (v) => ethers.utils.parseEther(v));
       const res = await flashBot._calcBorrowAmount(input);
       // @ts-ignore
-      expect(res).to.be.closeTo(ethers.utils.parseEther('8.729'), ethers.utils.parseEther('0.5'));
+      expect(res).to.be.closeTo(ethers.utils.parseEther('8.729'), ethers.utils.parseEther('0.01'));
     });
 
     it('revert with wrong order input', async () => {

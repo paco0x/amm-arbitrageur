@@ -310,7 +310,7 @@ contract FlashBot is Ownable {
         (int256 a1, int256 a2, int256 b1, int256 b2) =
             (int256(reserves.a1 / d), int256(reserves.a2 / d), int256(reserves.b1 / d), int256(reserves.b2 / d));
 
-        int256 a = a1 * b1 - a2 * b1;
+        int256 a = a1 * b1 - a2 * b2;
         int256 b = 2 * b1 * b2 * (a1 + a2);
         int256 c = b1 * b2 * (a1 * b2 - a2 * b1);
 
