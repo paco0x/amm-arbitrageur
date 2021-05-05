@@ -82,7 +82,10 @@ The solution x is the amount we need to borrow from Pair0.
 $ cp .secret.ts.sample .secret.ts
 ```
 
-3. Edit the private and address field in above config. Then run the script to deploy:
+3. Edit the private and address field in above config.
+
+
+4. Then run the script to deploy. By default, it deploys to BSC. If you wanna dpeloy to other network, you may need to change the network settings in `hardhat.config.ts`. You also need to change the WETH or other token address in the `deploy.ts`, it's WBNB address by default.
 
 
 ```bash
