@@ -129,7 +129,7 @@ $ hardhat test
 
 ### Too much math, what the hell is this contract for?
 
-To be simple, it moves the prices between different AMMs to the same level. You'll get profit by doing that. This contract helps you to make the maximum profit. And it uses flash loan so you only need little money(just some gas fees) to run it.
+To be simple, it moves the prices between different AMMs to the same level. You'll get profit by doing that. This contract helps you to get the maximum profit. And it uses flashswap so you only need little money(just some gas fees) to run it.
 
 ### How do I know the correctness of the contract?
 
