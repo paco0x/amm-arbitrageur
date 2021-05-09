@@ -129,26 +129,26 @@ $ hardhat test
 
 ### Too much math, what the hell is this contract for?
 
-To be simple, it moves the prices between different AMMs to the same level. You'll get profit by doing that. This contract help you make the most possible profit between two pairs. And it uses flash loan so you only need little money(just some gas fees) to run it.
+To be simple, it moves the prices between different AMMs to the same level. You'll get profit by doing that. This contract helps you to make the maximum profit. And it uses flash loan so you only need little money(just some gas fees) to run it.
 
 ### How do I know the correctness of the contract?
 
-By default the tests uses a forking network of BSC. The tests in `SwapTest.ts` demonstrate that the contract works corectly for arbitrage.
+By default, the tests use a forking network of the BSC mainnet(thanks to the powerful hardhat tool). The tests in `SwapTest.ts` demonstrate that the contract works correctly for arbitrage. You can check it by yourself.
 
 ### But I didn't make any profit by running your bot
 
-Well, there are too much bots running in the wild, especially in ETH and BSC. The bot code in this repo is too simple to be competiteve. You can't expect just running my code and earning a bunch of money. You need find out some strategies to make your own money.
+Well, there are too many bots running in the wild, especially in ETH and BSC. The bot code in this repo is too simple to be competitive. You can't expect just running my code and earning a bunch of money. You need to find out some strategies to make your own money.
 
 ### How can I change the token pairs the bot is monitoring?
 
-At the first time, the bot uses `bscBaseTokens`, `bscQuoteTokens` and `bscDexes` in `tokens.ts` to automatically get all possible tokens pairs and saves them into `bsc-pairs.json`. So it can reuse the json file next time the bot launches.
+At the first time, the bot uses `bscBaseTokens`, `bscQuoteTokens`, and `bscDexes` in `tokens.ts` to automatically get all possible token pairs and saves them into `bsc-pairs.json`. So it can reuse the json file next time the bot launches.
 
-If you want some other pairs. You can delete the `bsc-pairs.json` and edit the three variables above. Rerun the bot to so the bot uses new pairs. You can check the new pairs in `bsc-pairs.json`.
+If you want some other pairs. You can delete the `bsc-pairs.json` and edit the three variables above. Rerun the bot so it uses the new pairs. You can check the new pairs in `bsc-pairs.json`.
 
 ### Any suggestions to be competitive?
 
-- Lower the network lantency, you can use own node.
-- Higher gas price, make sure your transaction get handled quickly enough to take the profit. This is just like a competition between bots if they find a profitable chance at the same time.
-- Monitoring lesser tokens, the more you're monitoring, the lesser frequency the bot is looping. You can run mutiple bots to monitoring different token pairs.
+- Lower the network latency, you can use your own node.
+- Higher gas price, make sure your transaction gets handled quickly enough to take the profit. This is just like a competition between bots if they find a profitable chance at the same time.
+- Monitoring lesser tokens, the more you're monitoring, the lesser frequency the bot is looping. You can run multiple bots to monitoring different token pairs.
 - Go to some other networks such as FTM/Matic/..., there may be lesser bots running on them.
 - Do some other works such as liquidation, arbitrage in balancer/curve/0x... You need to implement these features by yourself.
