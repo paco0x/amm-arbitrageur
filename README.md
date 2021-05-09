@@ -149,6 +149,6 @@ If you want some other pairs. You can delete the `bsc-pairs.json` and edit the t
 
 - Lower the network latency, you can use your own node.
 - Higher gas price, make sure your transaction gets handled quickly enough to take the profit. This is just like a competition between bots if they find a profitable chance at the same time.
-- Monitoring lesser tokens, the more you're monitoring, the lesser frequency the bot is looping. You can run multiple bots to monitoring different token pairs.
+- Monitoring lesser tokens, the more you're monitoring, the lesser frequency the bot is looping. You can run multiple bots to monitor separate token pairs.
 - Go to some other networks such as FTM/Matic/..., there may be lesser bots running on them.
 - Do some other works such as liquidation, arbitrage in balancer/curve/0x... You need to implement these features by yourself.
