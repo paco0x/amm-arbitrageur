@@ -317,7 +317,7 @@ contract FlashBot is Ownable {
         (int256 x1, int256 x2) = calcSolutionForQuadratic(a, b, c);
 
         // 0 < x < b1 and 0 < x < b2
-        require((x1 > 0 && x1 < b1 && x1 < b2) || (x1 > 0 && x1 < b1 && x1 < b2), 'Wrong input order');
+        require((x1 > 0 && x1 < b1 && x1 < b2) || (x2 > 0 && x2 < b1 && x2 < b2), 'Wrong input order');
         amount = (x1 > 0 && x1 < b1 && x1 < b2) ? uint256(x1) * d : uint256(x2) * d;
     }
 
