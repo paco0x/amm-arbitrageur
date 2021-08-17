@@ -75,7 +75,7 @@ $ cp .secret.ts.sample .secret.ts
 
 
 ```bash
-$ hardhart --network XXX run scripts/deploy.ts
+$ hardhat --network XXX run scripts/deploy.ts
 
 ```
 
