@@ -162,3 +162,7 @@ If you want some other pairs. You can delete the `bsc-pairs.json` and edit the t
 ### Why terminal stucks when runnging "npx hardhat compile"?
 
 If you are running hardhat behind a proxy, maybe you will encounter the error like `HH502: Couldn't download compiler versions list. Please check your connection` when running `npx hardhat compile`. In order to go through this error, you need to set `HTTP_PROXY` or `HTTPS_PROXY` in your terminal. According to [this issue](https://github.com/nomiclabs/hardhat/issues/1280), the hardhat version 2.4.0 and the later version has supported `HTTP_PROXY` or `HTTPS_PROXY`. So you need to change the hardhat version from `2.1.2` to `2.4.0` or later in package.json.
+
+### Error occurs when running "npx hardhat run --network xxx bot/index.ts"
+
+The detailed error is `TSError: x Unable to compile TypeScript. bot/index.ts:63:13 - error TS2571: Object is of type 'unknown'`. Please make run your TypeScript version is ^4.2.4. You may meet this error if your TypeScipt version is above 4.4.x.
