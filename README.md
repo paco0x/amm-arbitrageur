@@ -166,3 +166,7 @@ If you are running hardhat behind a proxy, maybe you will encounter the error li
 ### Error occurs when running "npx hardhat run --network xxx bot/index.ts"
 
 The detailed error is `TSError: x Unable to compile TypeScript. bot/index.ts:63:13 - error TS2571: Object is of type 'unknown'`. Please make run your TypeScript version is ^4.2.4. You may meet this error if your TypeScipt version is above 4.4.x.
+
+### Error "cannot estimate gas; transaction may fail or may require manual gas limit"
+
+If you encounter this error, please don't be surprised. First of all, this bot hasn't tested well in bscTestnet. So if you want to run it well you would like better deploy it in bscMainnet. Secondly, since there are a lot of token pairs are deprecated so you need to modify the `pairs-bsc.json`.
