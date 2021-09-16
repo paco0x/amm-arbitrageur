@@ -123,6 +123,7 @@ $ yarn run bot
 - [MDEX](https://bsc.mdex.com/)
 - [BakerySwap](https://www.bakeryswap.org/#/swap)
 - [JulSwap](https://julswap.com/#/)
+- [ApeSwap](https://apeswap.finance/)
 - [~~ValueDeFi~~](https://bsc.valuedefi.io/)(Not supported)
 
 ## Run UT
